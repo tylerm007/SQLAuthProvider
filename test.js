@@ -30,7 +30,7 @@ sqlClient.configure(configSetup);
 var payload = {
     username: "tyler",
     password: "password1",
-    roleQuery : 'select * from employees'
+    roleQuery : 'select territory from employees'
 };
 
 out.println("------------- testing sql authenticate with good payload");

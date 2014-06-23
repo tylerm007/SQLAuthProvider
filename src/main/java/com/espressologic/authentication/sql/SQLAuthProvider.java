@@ -55,7 +55,8 @@ public class SQLAuthProvider {
 
 	private String authenticate(String url, String user, String pw, String query) throws ClassNotFoundException, SQLException {
 		StringBuffer sb = new StringBuffer();
-		sb.append("{");
+		sb.append("[");
+		
 		Connection connect = null;
 		Statement statement = null;
 		ResultSet resultSet = null;
@@ -73,10 +74,12 @@ public class SQLAuthProvider {
 			// "role1" , role: "role2" }
 			String sep = "";
 			while (resultSet.next()) {
+				if( !"NULL".equalsIgnoreCase(resultSet.getString(1))){
 				sb.append(sep);
-				sb.append("\"role\":");
-				sb.append("\"" + resultSet.getString(1) + "\"");
-				sep = ",";
+					sb.append("{\"role\":");
+					sb.append("\"" + resultSet.getString(1) + "\"}");
+					sep = ",";
+				}
 			}
 
 		} catch (SQLException se) {
@@ -91,7 +94,7 @@ public class SQLAuthProvider {
 			if (resultSet != null)
 				resultSet.close();
 		}
-		sb.append("}");
+		sb.append("]");
 		return sb.toString();
 	}
 }

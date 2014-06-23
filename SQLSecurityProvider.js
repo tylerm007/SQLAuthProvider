@@ -50,9 +50,9 @@ function SQLSecurityProviderCreate() {
             var loginAttempt = SysUtility.authenticate(configSetup.serverName,configSetup.serverPort,configSetup.databaseName,payload.username,payload.password,payload.roleQuery);
 
             var groups = JSON.parse(loginAttempt);
-            if (groups.hasOwnProperty('role')) {
-				for (var i = 0; i < groups.length; i++) {
-					roles.push(groups[i].role);
+            if (groups != null ) {
+				for (var row in groups) {
+					roles.push(groups[row].role);
 					//var customdata = groups.items[i].customData;
 					//parseCustomData(customDataHREF, customdata);
 				}
@@ -92,8 +92,8 @@ function SQLSecurityProviderCreate() {
             var groupsResponse = SysUtility.authenticate(configSetup.serverName,configSetup.serverPort,configSetup.databaseName,payload.username,payload.password,payload.roleQuery);
             var groups = JSON.parse(groupsResponse);
 
-            for (var i = 0; i < groups.length; i++) {
-				roles.push(groups[i].role);
+            for (var row in groups) {
+				roles.push(groups[row].role);
 			}
 
         }
