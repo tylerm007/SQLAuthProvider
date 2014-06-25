@@ -1,4 +1,3 @@
-node startLDAPServer.js
 
 
 set cp=target/classes

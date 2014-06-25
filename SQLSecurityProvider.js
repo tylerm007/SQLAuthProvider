@@ -6,6 +6,8 @@ function SQLSecurityProviderCreate() {
   		serverName  : '',
    		serverPort  : '' ,
    		databaseName: '',
+   		roleQuery: '',
+   		groupRoleQuery : '',
         keyLifetimeMinutes : 60
     };
 
@@ -14,6 +16,8 @@ function SQLSecurityProviderCreate() {
 		configSetup.serverName 	= myConfig.serverName || '';
    		configSetup.serverPort  = myConfig.serverPort || '' ;
    		configSetup.databaseName = myConfig.databaseName || '';
+   		configSetup.roleQuery = myConfig.roleQuery || '';
+   		configSetup.groupRoleQuery = myConfig.groupRoleQuery || '';
         configSetup.keyLifetimeMinutes = myConfig.keyLifetimeMinutes || 60;
     };
 
@@ -45,23 +49,21 @@ function SQLSecurityProviderCreate() {
         var forgotPasswordURL = null;
         var customDataHREF = {};
 
+		var roleQuery = configSetup.roleQuery +"'" + payload.username + "'";
         try {
             //POST this JSON request to determine if username and password account is valid
-            var loginAttempt = SysUtility.authenticate(configSetup.serverName,configSetup.serverPort,configSetup.databaseName,payload.username,payload.password,payload.roleQuery);
+            var loginAttempt = SysUtility.authenticate(configSetup.serverName,configSetup.serverPort,configSetup.databaseName,payload.username,payload.password,roleQuery);
 
             var groups = JSON.parse(loginAttempt);
-            if (groups != null ) {
+            if (groups.hasOwnProperty('errorMessage')) {
+					errorMsg = groups.errorMessage;
+			} else {
+				//note: change field name below to match column with role name
 				for (var row in groups) {
 					roles.push(groups[row].role);
-					//var customdata = groups.items[i].customData;
-					//parseCustomData(customDataHREF, customdata);
 				}
 
-		} else {
-			errorMsg = loginAttempt;
-		}
-
-
+			}
         }
         catch (e) {
                 errorMsg = e.message;
@@ -84,20 +86,23 @@ function SQLSecurityProviderCreate() {
     };
 
     //FUNCTION getAllGroups is used to map all available groups for existing application - DO NOT CHANGE
-    result.getAllGroups = function getAllGroups() {
+    result.getAllGroups = function getAllGroups(payload) {
         var roles = [];
         var errorMsg = null;
 
         try {
-            var groupsResponse = SysUtility.authenticate(configSetup.serverName,configSetup.serverPort,configSetup.databaseName,payload.username,payload.password,payload.roleQuery);
-            var groups = JSON.parse(groupsResponse);
-
-            for (var row in groups) {
-				roles.push(groups[row].role);
+			//we could easily use a REST call here and would pass the APIKey in with the payalod Sysutility.getJSON(url,settings,parameters);  see apiDoc
+            var groupsResponse = SysUtility.authenticate(configSetup.serverName,configSetup.serverPort,configSetup.databaseName,payload.username,payload.password,configSetup.groupRoleQuery);
+			var groups = JSON.parse(groupsResponse);
+			if (groups.hasOwnProperty('errorMessage')) {
+					errorMsg = groups.errorMessage;
+			} else {
+				//note: change field name below to match column with role name
+				for (var row in groups) {
+					roles.push(groups[row].role);
+				}
 			}
-
-        }
-        catch(e) {
+        } catch(e) {
             errorMsg = e.message;
         }
 
@@ -142,33 +147,53 @@ function SQLSecurityProviderCreate() {
         };
     };
 
+
+	//this is called when you setup a new authentication provider in LogicDesigner to prompt for your fixed internal values
     result.getConfigInfo = function getConfigInfo() {
         return {
             current : {
 
-                "keyLifetimeMinutes" : configSetup.keyLifetimeMinutes
+                "keyLifetimeMinutes" : configSetup.keyLifetimeMinutes,
+                "serverName" : configSetup.serverName,
+                "databaseName" : configSetup.databaseName,
+                "roleQuery" : configSetup.roleQuery,
+                "groupRoleQuery" : configSetup.groupRoleQuery
             },
             fields : [
                 {
                     name: "serverName",
-                    display: "SQL Server Name",
+                    display: "SQL Server Name (required)",
                     type: "text",
                     length: 40,
                     helpURL: ""
                 },
                 {
                     name: "Port",
-                    display: "Port",
+                    display: "Port (required)",
                     type: "text",
                     length: 40,
                     helpURL: ""
                 },
                  {
-						name: "Database",
-						display: "Database Name",
-						type: "text",
-						length: 40,
-						helpURL: ""
+					name: "Database",
+					display: "Database Name (required)",
+					type: "text",
+					length: 40,
+					helpURL: ""
+                },
+                 {
+					name: "roleQuery",
+					display: "Sql Query used to valid username (must have logon access to Database) and return list of all roles (required)",
+					type: "text",
+					length: 40,
+					helpURL: ""
+                },
+                 {
+					name: "groupRoleQuery",
+					display: "Sql Query used to return a list of all roles in system (optional)",
+					type: "text",
+					length: 40,
+					helpURL: ""
                 },
                 {
                     name: "keyLifetimeMinutes",

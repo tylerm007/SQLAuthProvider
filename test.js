@@ -20,6 +20,8 @@ var configSetup = {
    serverName  : 'localhost',
    serverPort  : '3306' ,
    databaseName: 'sample',
+   roleQuery : 'SELECT ur.roleName FROM sample.user_role ur , sample.user u where ur.username = u.loginName and u.loginName = ',
+   groupRoleQuery : 'select roleName from sample.role',
    keyLifetimeMinutes : 60
 };
 
@@ -28,9 +30,8 @@ var sqlClient = SQLSecurityProviderCreate();
 sqlClient.configure(configSetup);
 
 var payload = {
-    username: "tyler",
-    password: "password1",
-    roleQuery : 'select territory from employees'
+    username: "Tyler",
+    password: "Password1"
 };
 
 out.println("------------- testing sql authenticate with good payload");
@@ -42,8 +43,7 @@ out.println("-------------");
 out.println("------------- testing sql authenticate with bad payload");
 badPayload = {
     username: "DavidBAD",
-    password: "Password$1",
-    roleQuery : 'select roleName from roles r left join users u on r.userid = r.userid where u.user = '
+    password: "Password$1"
 };
 
 result = sqlClient.authenticate(badPayload);
@@ -52,14 +52,13 @@ out.println("-------------");
 
 
 var payload = {
-    username: "tyler",
-    password: "password1",
-    roleQuery : 'select * from employees'
+    username: "Tyler",
+    password: "Password1"
 };
 
 
 out.println("------------- testing getAllGroups");
-result = sqlClient.getAllGroups();
+result = sqlClient.getAllGroups(payload);
 out.println(JSON.stringify(result, null, 2));
 out.println("-------------");
 
